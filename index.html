@@ -5,8 +5,65 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>ooyun.dev</title>
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+  </style>
 </head>
 <body>
-  🚧
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.5.0/lib/p5.js"></script>
+  <script>
+    let snakes = []
+    let t = 0;
+
+    let bg = [Math.random() * 255, Math.random() * 255, Math.random() * 255]
+    let cg = [Math.abs(255 - bg[0]), Math.abs(255 - bg[1]), Math.abs(255 - bg[2])]
+
+    function setup() {
+      createCanvas(windowWidth, windowHeight);
+      // noStroke()
+
+      for (let i = 0; i < 30; i++) {
+        snakes.push(new Snake())
+      }
+    }
+
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+    }
+
+    function draw() {
+      background(bg[0], bg[1], bg[2], 30)
+
+      fill(cg[0], cg[1], cg[2])
+
+      snakes.forEach(snake => {
+        snake.run()
+      });
+
+      t += abs(mouseX - width * 0.5) * 0.000005;
+    }
+
+    class Snake {
+      rx = 0;
+      ry = 0;
+      rs = 0;
+
+      constructor() {
+        this.rx = random(width)
+        this.ry = random(height)
+        this.rs = random((width + height) * 0.05)
+      }
+
+      run() {
+        var x = width * noise(t + this.rx)
+        var y = height * noise(t + this.ry)
+        ellipse(x, y, this.rs, this.rs)
+      }
+    }
+
+  </script>
 </body>
-</html>
