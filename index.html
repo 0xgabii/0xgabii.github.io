@@ -16,52 +16,108 @@
 <body>
   <script src="https://cdn.jsdelivr.net/npm/p5@1.5.0/lib/p5.js"></script>
   <script>
-    let snakes = []
-    let t = 0;
+    const map = new Map();
+    const pointSize = 15;
+    const genDuration = 100;
 
-    let bg = [Math.random() * 255, Math.random() * 255, Math.random() * 255]
-    let cg = [Math.abs(255 - bg[0]), Math.abs(255 - bg[1]), Math.abs(255 - bg[2])]
+    let nextGenAt = Date.now() + genDuration;
+    const bg = [Math.random() * 255, Math.random() * 255, Math.random() * 255]
+    const cg = [Math.abs(255 - bg[0]), Math.abs(255 - bg[1]), Math.abs(255 - bg[2])]
 
     function setup() {
       createCanvas(windowWidth, windowHeight);
       // noStroke()
+      initialize();
+    }
 
-      for (let i = 0; i < 30; i++) {
-        snakes.push(new Snake())
-      }
+    function initialize() {
+      map.clear();
+      for (let y = 0; y < windowHeight; y+=pointSize)
+        for (let x = 0; x < windowWidth; x+=pointSize) {
+          const _x = x / pointSize;
+          const _y = y / pointSize;
+          map.set(`${_x},${_y}`, new Point(_x, _y, Math.random() > 0.9));
+        }
     }
 
     function windowResized() {
       resizeCanvas(windowWidth, windowHeight);
+      initialize();
     }
 
     function draw() {
-      background(bg[0], bg[1], bg[2], 30)
+      background(bg[0], bg[1], bg[2], 10)
 
-      fill(cg[0], cg[1], cg[2])
-
-      snakes.forEach(snake => {
-        snake.run()
-      });
-
-      t += abs(mouseX - width * 0.5) * 0.000005;
-    }
-
-    class Snake {
-      rx = 0;
-      ry = 0;
-      rs = 0;
-
-      constructor() {
-        this.rx = random(width)
-        this.ry = random(height)
-        this.rs = random((width + height) * 0.05)
+      if (nextGenAt < Date.now())
+      {
+        nextGenAt = Date.now() + genDuration;
+        map.forEach((v) => {
+          v.NextGen(map)
+        })
       }
 
-      run() {
-        var x = width * noise(t + this.rx)
-        var y = height * noise(t + this.ry)
-        ellipse(x, y, this.rs, this.rs)
+      map.forEach((v) => {
+        v.Update()
+      })
+    }
+
+    class Point {
+      x = 0;
+      y = 0;
+      cell = false;
+      nextCell = false;
+      gen = 0;
+
+      constructor(x, y, cell) {
+        this.x = x
+        this.y = y
+        this.cell = cell;
+        this.nextCell = cell;
+        if (cell)
+          this.gen = 1;
+        this.Draw()
+      }
+
+      Draw() {
+        if (this.cell)
+          fill(cg[0], cg[1], cg[2])
+        else
+          fill(0)
+        rect(this.x * pointSize, this.y * pointSize, pointSize)
+      }
+
+      Update() {
+        if (this.cell != this.nextCell) {
+          this.cell = this.nextCell;
+          this.Draw()
+        }
+      }
+
+      NextGen(map) {
+        let neighborCnt = 0;
+
+        for (let y = this.y - 1; y <= this.y + 1; y++)
+          for (let x = this.x - 1; x <= this.x + 1; x++) {
+            if (this.x == x && this.y == y)
+              continue;
+            const found = map.get(`${x},${y}`);
+            if (found && found.cell)
+              neighborCnt++;
+          }
+
+        if (this.cell) {
+          const dead = neighborCnt < 2 || neighborCnt > 3;
+          if (dead)
+            this.nextCell = false;
+          this.gen = dead ? 0 : this.gen + 1;
+        }
+        else {
+          const birth = neighborCnt == 3;
+          if (birth) {
+            this.nextCell = true;
+            this.gen = 1;
+          }
+        }
       }
     }
 
