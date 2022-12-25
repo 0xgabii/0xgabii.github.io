@@ -17,8 +17,8 @@
   <script src="https://cdn.jsdelivr.net/npm/p5@1.5.0/lib/p5.js"></script>
   <script>
     const map = new Map();
-    const pointSize = 15;
     const genDuration = 100;
+    let pointSize = 15;
 
     let nextGenAt = Date.now() + genDuration;
     const bg = [Math.random() * 255, Math.random() * 255, Math.random() * 255]
@@ -31,6 +31,7 @@
     }
 
     function initialize() {
+      pointSize = window.innerWidth < 800 ? 5 : 15
       map.clear();
       for (let y = 0; y < windowHeight; y+=pointSize)
         for (let x = 0; x < windowWidth; x+=pointSize) {
@@ -48,8 +49,7 @@
     function draw() {
       background(bg[0], bg[1], bg[2], 10)
 
-      if (nextGenAt < Date.now())
-      {
+      if (nextGenAt < Date.now()) {
         nextGenAt = Date.now() + genDuration;
         map.forEach((v) => {
           v.NextGen(map)
