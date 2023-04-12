@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>gabii.me</title>
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.5.0/lib/p5.js"></script>
+  <script>
+    let canvas;
+
+    // Set up canvas and colors
+    function setup() {
+      canvas = createCanvas(windowWidth, windowHeight);
+      angleMode(DEGREES);
+      frameRate(30);
+    }
+
+    // Draw the pattern
+    function draw() {
+      background(255);
+      stroke(0);
+      strokeWeight(2);
+      noFill();
+
+      let gridSize = 30;
+      let rectSize = 30;
+      let gridCount = 10;
+      let centerX = (gridCount * gridSize) / 2;
+      let centerY = (gridCount * gridSize) / 2;
+
+      // Loop through the grid
+      for (let x = gridSize; x < width - gridSize; x += gridSize) {
+        for (let y = gridSize; y < height - gridSize; y += gridSize) {
+          // Save the current transformation state
+          push();
+
+          // Move the origin to the center of each grid cell
+          translate(x + rectSize / 2, y + rectSize / 2);
+
+          // Calculate distance from the center
+          let distance = dist(x, y, centerX, centerY);
+
+          // Rotate the rectangle based on distance from the center and frameCount
+          let maxRotation = 100;
+          let angle = map(distance, 0, dist(centerX, centerY, centerX + gridCount * gridSize, centerY), 0, maxRotation);
+          rotate(angle + frameCount);
+
+          // Draw the rectangle
+          rect(-rectSize / 2, -rectSize / 2, rectSize, rectSize);
+
+          // Restore the transformation state
+          pop();
+        }
+      }
+
+      // Loop the animation after 360 frames
+      if (frameCount === 360) {
+        frameCount = 0;
+      }
+    }
+
+    // Resize the canvas when the window is resized
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+    }
+  </script>
+</body>
+</html>
