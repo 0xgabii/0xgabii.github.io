@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>gabii.me</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@800&display=swap');
+
+    body {
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+      font-family: Unbounded;
+    }
+    
+    .tip {
+      position: absolute;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      
+      padding: 12px 30px;
+      background-color: white;
+      border-radius: 10px;
+      font-size: 15px;
+      color: #000;
+
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .reference {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+
+      font-size: 10px;
+      color: #000;
+      text-decoration: none;
+    }
+
+    .creator {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+
+      font-size: 10px;
+      color: #000;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <span class="tip">
+    Drag & Draw
+  </span>
+
+  <a class="reference" href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life" target="_blank">
+    Conway's Game of Life
+  </a>
+
+  <a class="creator" href="https://github.com/0xgabii" target="_blank">
+    Coded by gabii
+  </a>
+
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.5.0/lib/p5.js"></script>
+  <script>
+    const map = new Map();
+    const genDuration = 100;
+    let pointSize = 15;
+
+    let nextGenAt = Date.now() + genDuration;
+    let bg = [Math.random() * 255, Math.random() * 255, Math.random() * 255]
+    let cg = [Math.abs(255 - bg[0]), Math.abs(255 - bg[1]), Math.abs(255 - bg[2])]
+
+    function setup() {
+      createCanvas(windowWidth, windowHeight);
+      // noStroke()
+      initialize();
+    }
+
+    function initialize() {
+      pointSize = window.innerWidth < 800 ? 7 : 15
+      map.clear();
+      for (let y = 0; y < windowHeight; y+=pointSize)
+        for (let x = 0; x < windowWidth; x+=pointSize) {
+          const _x = x / pointSize;
+          const _y = y / pointSize;
+          map.set(`${_x},${_y}`, new Point(_x, _y, Math.random() > 0.9));
+        }
+    }
+
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+      initialize();
+    }
+
+    function draw() {
+      background(bg[0], bg[1], bg[2], 10)
+
+      if (mouseIsPressed) {
+        const key = `${Math.floor(mouseX / pointSize)},${Math.floor(mouseY / pointSize)}`
+        const x = map.get(key);
+        if (x && !x.cell) {
+          x.nextCell = true;
+          map.set(key, x)
+        }
+      }
+
+      if (nextGenAt < Date.now()) {
+        nextGenAt = Date.now() + genDuration;
+        map.forEach((v) => {
+          v.NextGen(map)
+        })
+      }
+
+      map.forEach((v) => {
+        v.Update()
+      })
+    }
+
+    class Point {
+      x = 0;
+      y = 0;
+      cell = false;
+      nextCell = false;
+      gen = 0;
+
+      constructor(x, y, cell) {
+        this.x = x
+        this.y = y
+        this.cell = cell;
+        this.nextCell = cell;
+        if (cell)
+          this.gen = 1;
+        this.Draw()
+      }
+
+      Draw() {
+        if (this.cell)
+          fill(cg[0], cg[1], cg[2])
+        else
+          fill(0)
+        // ellipse(this.x * pointSize + pointSize * 0.5, this.y * pointSize + pointSize * 0.5, pointSize, pointSize)
+        rect(this.x * pointSize, this.y * pointSize, pointSize)
+      }
+
+      Update() {
+        if (this.cell != this.nextCell) {
+          this.cell = this.nextCell;
+          this.Draw()
+        }
+      }
+
+      NextGen(map) {
+        let neighborCnt = 0;
+
+        for (let y = this.y - 1; y <= this.y + 1; y++)
+          for (let x = this.x - 1; x <= this.x + 1; x++) {
+            if (this.x == x && this.y == y)
+              continue;
+            const found = map.get(`${x},${y}`);
+            if (found && found.cell)
+              neighborCnt++;
+          }
+
+        if (this.cell) {
+          const dead = neighborCnt < 2 || neighborCnt > 3;
+          if (dead)
+            this.nextCell = false;
+          this.gen = dead ? 0 : this.gen + 1;
+        }
+        else {
+          const birth = neighborCnt == 3;
+          if (birth) {
+            this.nextCell = true;
+            this.gen = 1;
+          }
+        }
+      }
+    }
+
+  </script>
+</body>
